@@ -7,11 +7,34 @@ function [x_dft, freq, fig_han] = plot_dft(X, S, varargin)
 % 
 %   PLOT_DFT(X,T) will plot the DFT of X assuming the array T is the time
 %   vector that X was sampled at. T must be the same length as X. If using
-%   MATLAB 2020b or above and T vector will work. If using below that
-%   version, the sampling period of T must be uniform.
+%   MATLAB 2020b or above any T vector will work. If using a version below
+%   that the signal will be resampled to a uniform sample size using the
+%   RESAMPLE builtin MATLAB function with the spline resampling kernel.
+%
+%   Optional arguments:
+%      "scale"    = Pass "linear" for a linear scale. Pass "log" for a
+%                   semi-log scale on the y-axis. Defaults to "log"
+%
+%      "sided"    = Pass "two" for a two-sided DFT plot. Pass "one" for a
+%                   one-sided DFT plot. Defaults to "two".
+%
+%      "location" = Pass "zero" for the DFT plot to be centered around
+%                   zero frequency. Pass "away" for it to be in the 
+%                   positive side. Defaults to "away".
+%
+%   Returns: [x_dft, freq, fig_han]
+%       x_dft     = The DFT vector that was plotted.
+%       freq      = The frequency domain plotted on.
+%       fig_han   = The handle to the figure holding the DFT plot.
+%
+%   Notes:
+%       Uses the builtin FFT function for calculating the DFT. If a
+%       non-uniformly sampled signal is passed in version 2020b or above
+%       then NUFFT is used instead.
+%
+%   See also FFT, FFT2, FFTSHIFT, NUFFT, IFFT, IFFT2, IFFTN.
 
-below_2020b = ~strcmp(version('-release'), '2020b');
-
+%% Input parsing.
 p = inputParser;
 addRequired(p, 'X')
 addRequired(p, 'S')
@@ -21,7 +44,9 @@ addParameter(p, 'location', 'away', @(x) any(validatestring(x, {'zero', 'away'})
 
 parse(p, X, S, varargin{:})
 
-N = length(p.Results.X); % Number of samples.
+% Random variables
+N          = length(p.Results.X); % Number of samples.
+below_2020b = ~strcmp(version('-release'), '2020b');
 
 %% Find sampling period (if there is one)
 if (isinteger(S) || all((mod(S, 1) == 0))) && (length(S) == 1)
